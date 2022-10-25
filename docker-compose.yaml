@@ -1,7 +1,7 @@
 version: "3.9"
 services:
   db:
-    image: postgres
+    image: postgres:alpine
     restart: always
     environment:
       POSTGRES_USER: app
@@ -11,7 +11,4 @@ services:
     ports:
       - 5000:5432
     volumes:
-      - postgres:/var/lib/postgresql/data
-
-volumes:
-  postgres:
+      - ./db:/var/lib/postgresql/data
