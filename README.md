@@ -38,5 +38,5 @@ from the root of the project.
 Then, launch the server with
 
 ```shell
-"ts-node-dev \"./src/server.ts\""
+ts-node-dev \"./src/server.ts\"
 ```
