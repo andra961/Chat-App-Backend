@@ -17,7 +17,7 @@ to install the npm packages.
 
 ## Docker
 
-`PostgreSQL` can be installed either locally or available with the `docker-compose.yaml` file in the root of the project.
+`PostgreSQL` can be installed either locally or made available in a container easily using the `docker-compose.yaml` file in the root of the project.
 
 If using the latter, be sure to have `Docker` installing and running on your system.
 
