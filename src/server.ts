@@ -5,6 +5,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import { createTable, getMessages, postMessage } from "./services/postgres";
 
+let totalConnections = 0;
 let connections = 0;
 
 const app = express();
@@ -23,8 +24,9 @@ const wss = new WebSocket.Server({ port: 8080 }, () =>
 );
 
 wss.on("connection", (ws) => {
+  totalConnections++;
   connections++;
-  console.log("connections opened", connections);
+  console.log("open connections: ", connections);
   ws.on("message", (message) => {
     console.log(`New message received: ${message} ${wss.clients.size}`);
     wss.clients.forEach((client) => {
@@ -34,7 +36,9 @@ wss.on("connection", (ws) => {
     });
     void postMessage(JSON.parse(message.toString()));
   });
-  ws.on("close", () => console.log("one connection closed"));
+  ws.on("close", () =>
+    console.log("one connection closed, remaining:", --connections)
+  );
 });
 
 //create table if it doesn't exist
