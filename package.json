@@ -7,7 +7,8 @@
     "ws-server": "ts-node-dev \"./src/ws-server.ts\"",
     "msg-store-worker": "ts-node-dev \"./src/msg-store-worker.ts\"",
     "msg-api": "ts-node-dev \"./src/msg-api.ts\"",
-    "docker-up": "docker-compose up"
+    "docker-up": "docker-compose up",
+    "docker-down": "docker-compose down"
   },
   "keywords": [],
   "author": "",
