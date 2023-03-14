@@ -12,3 +12,13 @@ services:
       - 5000:5432
     volumes:
       - ./db:/var/lib/postgresql/data
+  rabbitmq:
+    image: rabbitmq:3.11-management-alpine
+    container_name: "rabbitmq"
+    restart: always
+    environment:
+      - "RABBITMQ_DEFAULT_PASS=password"
+      - "RABBITMQ_DEFAULT_USER=username"
+    ports:
+      - 15672:15672
+      - 5672:5672
