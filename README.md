@@ -31,7 +31,7 @@ If using the latter, be sure to have `Docker` installing and running on your sys
 
 Create in the root folder a file called `.env`, writing the variables copying the contents of `.env.example`. You can of course also change their values.
 
-## Launch the project
+## Postgres
 
 First, be sure `PostgreSQL` is installed and running on your computer. If instead of using a local instance you are using `Docker`, just run
 
@@ -41,7 +41,15 @@ docker-compose up
 
 from the root of the project.
 
-Then, launch the microservices with
+Then, run `prisma migrate` to have your local db in sync with the schema
+
+```shell
+npx prisma migrate dev
+```
+
+## Launch the project
+
+Launch the microservices with
 
 ```shell
 ts-node-dev \"./src/ws-server.ts\"

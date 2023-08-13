@@ -1,6 +1,6 @@
 import { Channel, ConsumeMessage } from "amqplib";
 import initRabbit from "./config/rabbitMQ.config";
-import { createTable, getMessages, postMessage } from "./services/postgres";
+import { postMessage } from "./services/postgres";
 const initWorker = async () => {
   const channel = await initRabbit();
   const consumer = (channel: Channel) => async (msg: ConsumeMessage | null) => {

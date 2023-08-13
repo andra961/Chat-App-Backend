@@ -2,7 +2,7 @@ import express from "express";
 //@ts-ignore
 import cors from "cors";
 import bodyParser from "body-parser";
-import { createTable, getMessages } from "./services/postgres";
+import { getMessages } from "./services/postgres";
 
 const initApp = async () => {
   const app = express();
@@ -17,11 +17,11 @@ const initApp = async () => {
   });
 
   //create table if it doesn't exist
-  try {
-    await createTable();
-  } catch (e) {
-    console.error(`${e}`);
-  }
+  // try {
+  //   await createTable();
+  // } catch (e) {
+  //   console.error(`${e}`);
+  // }
 
   app.listen(4000, () => console.log("app listening on port 4000"));
 };
