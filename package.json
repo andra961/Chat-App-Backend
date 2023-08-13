@@ -9,7 +9,8 @@
     "msg-api": "ts-node-dev \"./src/msg-api.ts\"",
     "docker-up": "docker-compose up",
     "docker-down": "docker-compose down",
-    "prisma-migrate": "prisma migrate dev"
+    "prisma-migrate": "prisma migrate dev",
+    "generate-jwt": "ts-node-dev \"./src/services/generateJWTSecret.ts\""
   },
   "keywords": [],
   "author": "",
@@ -17,15 +18,19 @@
   "dependencies": {
     "@prisma/client": "^5.1.1",
     "amqplib": "^0.10.3",
+    "bcrypt": "^5.1.0",
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
     "express": "^4.18.1",
+    "jsonwebtoken": "^9.0.1",
     "pg": "^8.7.3",
     "ws": "^8.8.1"
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.1",
+    "@types/bcrypt": "^5.0.0",
     "@types/express": "^4.17.13",
+    "@types/jsonwebtoken": "^9.0.2",
     "@types/pg": "^8.6.5",
     "@types/ws": "^8.5.3",
     "prisma": "^5.1.1",

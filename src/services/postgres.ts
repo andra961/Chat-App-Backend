@@ -1,8 +1,6 @@
 // import pool from "../config/postgres.config";
+import prisma from "../config/prisma.config";
 import { Message } from "../models/message";
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
 
 // export const createTable = async () => {
 //   await pool.query(`
@@ -21,6 +19,17 @@ export const getMessages = async () => {
   // console.log("prisma", resultsPrisma);
   // return results.rows;
   return results;
+};
+
+export const createUser = async (username: string, passwordHash: string) => {
+  const user = prisma.user.create({
+    data: {
+      username,
+      password_hash: passwordHash,
+    },
+  });
+
+  return user;
 };
 
 export const postMessage = async (message: Message) => {
