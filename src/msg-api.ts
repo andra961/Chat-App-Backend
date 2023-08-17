@@ -1,4 +1,5 @@
 import express from "express";
+import crypto from "crypto";
 //@ts-ignore
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -18,7 +19,27 @@ const initApp = async () => {
   app.use(cors());
   app.use(bodyParser.json());
 
-  app.get("/messages", async (req, res) => {
+  app.get("/ws-ticket", authenticateToken, async (req, res) => {
+    const ticket = crypto.randomBytes(32).toString("hex");
+
+    const { userId } = req.user;
+
+    await prisma.wsTicket.create({
+      data: {
+        ticket,
+        expiration: new Date(
+          Date.now() + (Number(process.env.WS_TICKET_EXP) || 120000)
+        ),
+        userId,
+      },
+    });
+
+    res.status(200).json({
+      ticket,
+    });
+  });
+
+  app.get("/messages", authenticateToken, async (req, res) => {
     const results = await getMessages();
 
     res.status(200).send(results);
@@ -32,8 +53,7 @@ const initApp = async () => {
   // }
 
   app.post("/is-authenticated", authenticateToken, async (req, res) => {
-    //TODO check JWT
-    res.status(200).json({ success: true, data: req.user });
+    res.status(200).json(req.user);
   });
 
   app.post("/login", async (req, res, next) => {
@@ -62,17 +82,14 @@ const initApp = async () => {
 
       //Creating jwt token
       const token = jwt.sign(
-        { userId: user.id, username },
+        { userId: user.id, username: username },
         process.env.JWT_SECRET || "secret",
         { expiresIn: "1h" }
       );
 
       console.log(token);
 
-      res.status(201).json({
-        success: true,
-        data: { userId: user.id, token: token },
-      });
+      res.status(201).json({ token: token, username });
     } catch (err) {
       const error = new Error(
         err instanceof Error ? err.message : "Something went wrong"
@@ -91,17 +108,14 @@ const initApp = async () => {
     try {
       const user = await createUser(username, hash);
       const token = jwt.sign(
-        { userId: user.id, username },
+        { userId: user.id, username: username },
         process.env.JWT_SECRET || "secret",
         { expiresIn: "1h" }
       );
 
       console.log(token);
 
-      res.status(201).json({
-        success: true,
-        data: { userId: user.id, token: token },
-      });
+      res.status(201).json({ token: token, username });
     } catch (err) {
       const error = new Error(
         err instanceof Error ? err.message : "Something went wrong"

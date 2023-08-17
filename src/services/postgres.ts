@@ -15,14 +15,14 @@ import { Message } from "../models/message";
 export const getMessages = async () => {
   // const results = await pool.query<Message>("SELECT * FROM messages");
 
-  const results = await prisma.messages.findMany();
+  const results = await prisma.message.findMany();
   // console.log("prisma", resultsPrisma);
   // return results.rows;
   return results;
 };
 
 export const createUser = async (username: string, passwordHash: string) => {
-  const user = prisma.user.create({
+  const user = await prisma.user.create({
     data: {
       username,
       password_hash: passwordHash,
@@ -38,7 +38,7 @@ export const postMessage = async (message: Message) => {
   //   [message.op, message.text, message.timestamp || Date.now() / 1000.0]
   // );
 
-  const msg = await prisma.messages.create({
+  const msg = await prisma.message.create({
     data: {
       op: message.op,
       text: message.text,
@@ -49,4 +49,29 @@ export const postMessage = async (message: Message) => {
     },
   });
   return msg;
+};
+
+export const verifyWsTicket = async (ticket: string) => {
+  const match = await prisma.wsTicket.findFirst({
+    where: {
+      ticket,
+    },
+    include: {
+      user: true,
+    },
+  });
+
+  if (match === null) throw new Error("Invalid ws ticket");
+
+  //invalidate ticket
+  // await prisma.wsTicket.delete({
+  //   where: {
+  //     id: match.id,
+  //   },
+  // });
+
+  if (match.expiration.getTime() <= Date.now())
+    throw new Error("Expired ws ticket");
+
+  return { userId: match.userId, username: match.user.username };
 };

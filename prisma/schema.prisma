@@ -11,11 +11,20 @@ model User {
   id Int @id @default(autoincrement())
   username  String   @unique @db.VarChar(30)
   password_hash String @db.VarChar(60)
+  ws_tickets WsTicket[]
 }
 
-model messages {
+model Message {
   id        Int      @id @default(autoincrement())
   op        String   @db.VarChar(30)
   text      String   @db.VarChar(1000)
   timestamp DateTime @db.Timestamp(6)
+}
+
+model WsTicket {
+  id        Int      @id @default(autoincrement())
+  ticket String @unique @db.VarChar(64)
+  expiration DateTime @db.Timestamp(6)
+  user  User @relation(fields: [userId], references: [id])
+  userId Int
 }

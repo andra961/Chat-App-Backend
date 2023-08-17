@@ -2,7 +2,7 @@ import jwt from "jsonwebtoken";
 import { NextFunction, Request, Response } from "express";
 declare module "express-serve-static-core" {
   interface Request {
-    user: { userId: string; username: string };
+    user: { userId: number; username: string };
   }
 }
 
@@ -20,7 +20,7 @@ export function authenticateToken(
   jwt.verify(token, process.env.JWT_SECRET as string, (err: any, user: any) => {
     if (err) return res.sendStatus(401);
 
-    req.user = user;
+    req.user = { ...user, token };
 
     next();
   });
