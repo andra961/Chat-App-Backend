@@ -31,6 +31,14 @@ If using the latter, be sure to have `Docker` installing and running on your sys
 
 Create in the root folder a file called `.env`, writing the variables copying the contents of `.env.example`. You can of course also change their values.
 
+To generate the `JWT_SECRET` you can use
+
+```shell
+"ts-node-dev \"./src/services/generateJWTSecret.ts\""
+```
+
+It will generate 32 random bytes in hex form and make with it a 64 length string.
+
 ## Postgres
 
 First, be sure `PostgreSQL` is installed and running on your computer. If instead of using a local instance you are using `Docker`, just run

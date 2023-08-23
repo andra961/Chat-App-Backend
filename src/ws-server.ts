@@ -1,9 +1,13 @@
 import WebSocket from "ws";
+import dotenv from "dotenv";
 
-import initRabbit from "./config/rabbitMQ.config";
+import initRabbit, { initRabbitPubSub } from "./config/rabbitMQ.config";
 import { createServer, IncomingMessage } from "http";
 import url, { URLSearchParams } from "url";
 import { verifyWsTicket } from "./services/postgres";
+import prisma from "./config/prisma.config";
+
+const port = process.env.WS_SERVER_PORT || 8080;
 
 let totalConnections = 0;
 let connections = 0;
@@ -23,7 +27,6 @@ const authenticate = async (req: IncomingMessage) => {
 };
 
 const initApp = async () => {
-  const channel = await initRabbit();
   server.on("upgrade", async function upgrade(request, socket, head) {
     try {
       const data = await authenticate(request);
@@ -38,16 +41,34 @@ const initApp = async () => {
       return;
     }
   });
-  server.listen(8080);
+  server.listen(port);
 
   //no server means we have to call the connection event manually with an external http server that will handle auth too
   //see https://github.com/websockets/ws/blob/master/doc/ws.md#new-websocketserveroptions-callback
+  const usersConnections: Record<number, Set<WebSocket.WebSocket>> = {};
   const wss = new WebSocket.Server({ noServer: true }, () =>
-    console.log("Server listening on port 8080")
+    console.log(`WS Server listening on port ${port}`)
   );
 
+  console.log(`WS Server listening on port ${port}`);
+
+  const forwardToUsers = async (msg: any) => {
+    // let users = [];
+    if (msg.channelId === "public") {
+      const users = await prisma.user.findMany();
+
+      users.forEach((u) => {
+        if (u.id in usersConnections)
+          usersConnections[u.id].forEach((c) => c.send(JSON.stringify(msg)));
+      });
+    }
+  };
+
   //hashmap userId => active connections
-  const usersConnections: Record<number, Set<WebSocket.WebSocket>> = {};
+  const { publishMsg } = await initRabbitPubSub((msgRaw) => {
+    const msg = JSON.parse(msgRaw);
+    forwardToUsers(msg);
+  });
 
   wss.on(
     "connection",
@@ -67,19 +88,24 @@ const initApp = async () => {
           ...JSON.parse(msg.toString()),
           op: username,
         });
+        publishMsg(enrichedMsg);
         console.log(usersConnections);
-        console.log(`New message received: ${enrichedMsg} ${wss.clients.size}`);
-        wss.clients.forEach((client) => {
-          if (client !== ws && client.readyState === WebSocket.OPEN) {
-            client.send(enrichedMsg.toString());
-          }
-        });
+        console.log(
+          `New message received from ws: ${enrichedMsg} ${wss.clients.size}`
+        );
+        // wss.clients.forEach((client) => {
+        //   if (client !== ws && client.readyState === WebSocket.OPEN) {
+        //     client.send(enrichedMsg.toString());
+        //   }
+        // });
         //Send a enrichedMsg to the queue
-        channel.sendToQueue("chat-msgs", Buffer.from(enrichedMsg.toString()));
+        //channel.sendToQueue("chat-msgs", Buffer.from(enrichedMsg.toString()));
       });
       ws.on("close", () => {
         console.log("one connection closed, remaining:", --connections);
         usersConnections[userId].delete(ws);
+        if (usersConnections[userId].size === 0)
+          delete usersConnections[userId];
       });
     }
   );

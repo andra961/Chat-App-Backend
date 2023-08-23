@@ -1,6 +1,13 @@
 import client, { Connection } from "amqplib";
 
 export const rabbitConnect = async () => {
+  console.log(
+    "connecting rabbit",
+    `amqp://${process.env.RABBITMQ_USER}:${process.env.RABBITMQ_PASSWORD}@${
+      process.env.RABBITMQ_HOST
+    }:${parseInt(process.env.RABBITMQ_PORT || "5672")}`
+  );
+
   const connection: Connection = await client.connect(
     `amqp://${process.env.RABBITMQ_USER}:${process.env.RABBITMQ_PASSWORD}@${
       process.env.RABBITMQ_HOST

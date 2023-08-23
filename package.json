@@ -10,7 +10,8 @@
     "docker-up": "docker-compose up",
     "docker-down": "docker-compose down",
     "prisma-migrate": "prisma migrate dev",
-    "generate-jwt": "ts-node-dev \"./src/services/generateJWTSecret.ts\""
+    "generate-jwt": "ts-node-dev \"./src/services/generateJWTSecret.ts\"",
+    "build-ws-server": "tsc"
   },
   "keywords": [],
   "author": "",

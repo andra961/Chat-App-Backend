@@ -15,6 +15,7 @@ dotenv.config();
 
 const initApp = async () => {
   const app = express();
+  const port = process.env.API_SERVER_PORT || 4000;
 
   app.use(cors());
   app.use(bodyParser.json());
@@ -124,7 +125,7 @@ const initApp = async () => {
     }
   });
 
-  app.listen(4000, () => console.log("app listening on port 4000"));
+  app.listen(port, () => console.log(`API Aerver listening on port ${port}`));
 };
 
 void initApp();

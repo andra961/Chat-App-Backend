@@ -1,0 +1,10 @@
+# prisma
+db
+.git
+.dockerignore
+README.md
+haproxy
+.env.example
+.gitignore
+Dockerfile
+docker-compose.yaml
