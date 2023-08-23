@@ -41,7 +41,7 @@ services:
       - "POSTGRES_HOST=db"
       - "RABBITMQ_HOST=rabbitmq"
       - "WS_SERVER_PORT=8070"
-      #use db service internal port (5432) and NOT the port mapped for the host machine (aka 5000)
+      #use db service internal port (5432) and NOT the port mapped for the host machine (aka 5000) since containers in network can only see their internal ports
       - "DATABASE_URL=postgresql://app:app@db:5432/chat?schema=public"
     depends_on:
       - db
@@ -57,7 +57,7 @@ services:
       - "POSTGRES_HOST=db"
       - "RABBITMQ_HOST=rabbitmq"
       - "WS_SERVER_PORT=8060"
-      #use db service internal port (5432) and NOT the port mapped for the host machine (aka 5000)
+      #use db service internal port (5432) and NOT the port mapped for the host machine (aka 5000) since containers in network can only see their internal ports
       - "DATABASE_URL=postgresql://app:app@db:5432/chat?schema=public"
     depends_on:
       - db
@@ -73,7 +73,7 @@ services:
       - "POSTGRES_HOST=db"
       - "RABBITMQ_HOST=rabbitmq"
       - "WS_SERVER_PORT=8050"
-      #use db service internal port (5432) and NOT the port mapped for the host machine (aka 5000)
+      #use db service internal port (5432) and NOT the port mapped for the host machine (aka 5000) since containers in network can only see their internal ports
       - "DATABASE_URL=postgresql://app:app@db:5432/chat?schema=public"
     depends_on:
       - db
