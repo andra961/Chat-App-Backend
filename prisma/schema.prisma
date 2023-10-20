@@ -7,10 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Chat {
+  id Int @id @default(autoincrement())
+  owner User @relation("owner", fields: [ownerId], references: [id])
+  ownerId Int
+  members User[] @relation("member")
+}
+
 model User {
   id Int @id @default(autoincrement())
   username  String   @unique @db.VarChar(30)
   password_hash String @db.VarChar(60)
+  ownedChats Chat[] @relation("owner")
+  joinedChats Chat[]  @relation("member")
   ws_tickets WsTicket[]
 }
 

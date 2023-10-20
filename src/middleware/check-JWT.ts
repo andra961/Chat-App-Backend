@@ -13,7 +13,7 @@ export function authenticateToken(
 ) {
   const token = req.headers["authorization"];
 
-  console.log(token);
+  //console.log(token);
 
   if (token == null) return res.sendStatus(401);
 

@@ -75,3 +75,18 @@ export const verifyWsTicket = async (ticket: string) => {
 
   return { userId: match.userId, username: match.user.username };
 };
+
+//shoud be equivalent to innerjoin SELECT * FROM "Chat" INNER JOIN _member ON "Chat".id = _member.A WHERE _member.B = 28
+export const getChats = async (userId: number) => {
+  const chats = await prisma.chat.findMany({
+    where: {
+      members: {
+        some: {
+          id: userId,
+        },
+      },
+    },
+  });
+
+  return chats;
+};

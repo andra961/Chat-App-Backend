@@ -4,9 +4,9 @@ import crypto from "crypto";
 import cors from "cors";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
-import { createUser, getMessages } from "./services/postgres";
+import { createUser, getChats, getMessages } from "./services/postgres";
 import bcrypt from "bcrypt";
-
+import morgan from "morgan";
 import dotenv from "dotenv";
 import prisma from "./config/prisma.config";
 import { authenticateToken } from "./middleware/check-JWT";
@@ -19,6 +19,16 @@ const initApp = async () => {
 
   app.use(cors());
   app.use(bodyParser.json());
+
+  app.use(
+    morgan(":method :url :status :res[content-length] - :response-time ms", {
+      stream: {
+        write: (str) => {
+          console.info(str);
+        },
+      },
+    })
+  );
 
   app.get("/ws-ticket", authenticateToken, async (req, res) => {
     const ticket = crypto.randomBytes(32).toString("hex");
@@ -42,6 +52,14 @@ const initApp = async () => {
 
   app.get("/messages", authenticateToken, async (req, res) => {
     const results = await getMessages();
+
+    res.status(200).send(results);
+  });
+
+  app.get("/chats", authenticateToken, async (req, res) => {
+    const { userId } = req.user;
+
+    const results = await getChats(userId);
 
     res.status(200).send(results);
   });
