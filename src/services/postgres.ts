@@ -1,6 +1,6 @@
 // import pool from "../config/postgres.config";
 import prisma from "../config/prisma.config";
-import { Message } from "../models/message";
+import { DirectMessage, GroupMessage } from "../models/message";
 
 // export const createTable = async () => {
 //   await pool.query(`
@@ -12,10 +12,14 @@ import { Message } from "../models/message";
 //   );`);
 // };
 
-export const getMessages = async () => {
+export const getMessages = async (id: string) => {
   // const results = await pool.query<Message>("SELECT * FROM messages");
 
-  const results = await prisma.message.findMany();
+  const results = await prisma.groupMessage.findMany({
+    where: {
+      chatId: Number(id),
+    },
+  });
   // console.log("prisma", resultsPrisma);
   // return results.rows;
   return results;
@@ -32,23 +36,39 @@ export const createUser = async (username: string, passwordHash: string) => {
   return user;
 };
 
-export const postMessage = async (message: Message) => {
+export const postMessage = async (message: DirectMessage | GroupMessage) => {
   // const results = await pool.query<Message>(
   //   "INSERT INTO messages (op, text, timestamp) VALUES ($1, $2, to_timestamp($3))",
   //   [message.op, message.text, message.timestamp || Date.now() / 1000.0]
   // );
 
-  const msg = await prisma.message.create({
-    data: {
-      op: message.op,
-      text: message.text,
-      timestamp:
-        message.timestamp !== undefined
-          ? new Date(message.timestamp)
-          : new Date(),
-    },
-  });
-  return msg;
+  if ("receiver" in message) {
+    const msg = await prisma.message.create({
+      data: {
+        senderId: message.senderId,
+        receiverId: message.receiver,
+        text: message.text,
+        timestamp:
+          message.timestamp !== undefined
+            ? new Date(message.timestamp)
+            : new Date(),
+      },
+    });
+    return msg;
+  } else {
+    const msg = await prisma.groupMessage.create({
+      data: {
+        senderId: message.senderId,
+        chatId: Number(message.chatId),
+        text: message.text,
+        timestamp:
+          message.timestamp !== undefined
+            ? new Date(message.timestamp)
+            : new Date(),
+      },
+    });
+    return msg;
+  }
 };
 
 export const verifyWsTicket = async (ticket: string) => {
@@ -63,16 +83,15 @@ export const verifyWsTicket = async (ticket: string) => {
 
   if (match === null) throw new Error("Invalid ws ticket");
 
-  //invalidate ticket
-  // await prisma.wsTicket.delete({
-  //   where: {
-  //     id: match.id,
-  //   },
-  // });
-
   if (match.expiration.getTime() <= Date.now())
     throw new Error("Expired ws ticket");
 
+  // invalidate ticket
+  void prisma.wsTicket.delete({
+    where: {
+      id: match.id,
+    },
+  });
   return { userId: match.userId, username: match.user.username };
 };
 

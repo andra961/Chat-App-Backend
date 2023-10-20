@@ -9,9 +9,11 @@ datasource db {
 
 model Chat {
   id Int @id @default(autoincrement())
+  name String @db.VarChar(60)
   owner User @relation("owner", fields: [ownerId], references: [id])
   ownerId Int
   members User[] @relation("member")
+  messages GroupMessage[]
 }
 
 model User {
@@ -25,7 +27,17 @@ model User {
 
 model Message {
   id        Int      @id @default(autoincrement())
-  op        String   @db.VarChar(30)
+  senderId        String   @db.VarChar(30)
+  receiverId  String   @db.VarChar(30)
+  text      String   @db.VarChar(1000)
+  timestamp DateTime @db.Timestamp(6)
+}
+
+model GroupMessage {
+  id        Int      @id @default(autoincrement())
+  senderId  String   @db.VarChar(30)
+  chat  Chat   @relation(fields: [chatId], references: [id])
+  chatId  Int
   text      String   @db.VarChar(1000)
   timestamp DateTime @db.Timestamp(6)
 }

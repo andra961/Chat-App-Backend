@@ -50,8 +50,10 @@ const initApp = async () => {
     });
   });
 
-  app.get("/messages", authenticateToken, async (req, res) => {
-    const results = await getMessages();
+  app.get("/messages/:chatId", authenticateToken, async (req, res) => {
+    const { chatId } = req.params;
+    // console.log(chatId, req);
+    const results = await getMessages(chatId);
 
     res.status(200).send(results);
   });
@@ -143,7 +145,7 @@ const initApp = async () => {
     }
   });
 
-  app.listen(port, () => console.log(`API Aerver listening on port ${port}`));
+  app.listen(port, () => console.log(`API Server listening on port ${port}`));
 };
 
 void initApp();

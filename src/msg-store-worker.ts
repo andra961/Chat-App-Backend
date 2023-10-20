@@ -1,9 +1,12 @@
 import { Channel, ConsumeMessage } from "amqplib";
-import initRabbit from "./config/rabbitMQ.config";
+import {
+  initRabbitChannel,
+  initStoreMessageQueue,
+} from "./config/rabbitMQ.config";
 import { postMessage } from "./services/postgres";
 
 const initWorker = async () => {
-  const channel = await initRabbit();
+  const { channel } = await initRabbitChannel();
   const consumer = (channel: Channel) => async (msg: ConsumeMessage | null) => {
     if (msg) {
       const msgText = msg.content.toString();
@@ -15,7 +18,13 @@ const initWorker = async () => {
     }
   };
 
-  await channel.consume("chat-msgs", consumer(channel));
+  //assert the queue exists
+  await initStoreMessageQueue(channel);
+
+  await channel.consume(
+    process.env.RABBITMQ_MSG_STORE_QUEUE || "msgs2store",
+    consumer(channel)
+  );
 };
 
 void initWorker();

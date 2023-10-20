@@ -1,11 +1,15 @@
 import WebSocket from "ws";
 import dotenv from "dotenv";
 
-import initRabbit, { initRabbitPubSub } from "./config/rabbitMQ.config";
+import {
+  initMessageExchange,
+  initRabbitChannel,
+} from "./config/rabbitMQ.config";
 import { createServer, IncomingMessage } from "http";
 import url, { URLSearchParams } from "url";
 import { verifyWsTicket } from "./services/postgres";
 import prisma from "./config/prisma.config";
+import { DirectMessage, GroupMessage, MessageBase } from "./models/message";
 
 const port = process.env.WS_SERVER_PORT || 8080;
 
@@ -43,9 +47,11 @@ const initApp = async () => {
   });
   server.listen(port);
 
+  //hashmap userId => active connections
+  const usersConnections: Record<number, Set<WebSocket.WebSocket>> = {};
+
   //no server means we have to call the connection event manually with an external http server that will handle auth too
   //see https://github.com/websockets/ws/blob/master/doc/ws.md#new-websocketserveroptions-callback
-  const usersConnections: Record<number, Set<WebSocket.WebSocket>> = {};
   const wss = new WebSocket.Server({ noServer: true }, () =>
     console.log(`WS Server listening on port ${port}`)
   );
@@ -53,19 +59,30 @@ const initApp = async () => {
   console.log(`WS Server listening on port ${port}`);
 
   const forwardToUsers = async (msg: any) => {
-    // let users = [];
-    if (msg.channelId === "public") {
-      const users = await prisma.user.findMany();
+    if (msg.chatId !== undefined) {
+      const members = (
+        await prisma.chat.findUnique({
+          where: {
+            id: Number(msg.chatId),
+          },
+          include: {
+            members: true,
+          },
+        })
+      )?.members;
 
-      users.forEach((u) => {
+      if (members === undefined) return;
+
+      members.forEach((u) => {
         if (u.id in usersConnections)
           usersConnections[u.id].forEach((c) => c.send(JSON.stringify(msg)));
       });
     }
   };
 
-  //hashmap userId => active connections
-  const { publishMsg } = await initRabbitPubSub((msgRaw) => {
+  const { channel } = await initRabbitChannel();
+
+  const { publishMsg } = await initMessageExchange(channel, (msgRaw) => {
     const msg = JSON.parse(msgRaw);
     forwardToUsers(msg);
   });
@@ -84,22 +101,25 @@ const initApp = async () => {
       else usersConnections[userId] = new Set([ws]);
 
       ws.on("message", (msg: any) => {
-        const enrichedMsg = JSON.stringify({
+        const sender: Pick<MessageBase, "senderId"> = { senderId: username };
+        const enrichedMsg: DirectMessage | GroupMessage = {
           ...JSON.parse(msg.toString()),
-          op: username,
-        });
-        publishMsg(enrichedMsg);
+          ...sender,
+        };
+
+        const enrichedMsgString = JSON.stringify(enrichedMsg);
+        publishMsg(enrichedMsgString);
         console.log(usersConnections);
         console.log(
-          `New message received from ws: ${enrichedMsg} ${wss.clients.size}`
+          `New message received from ws: ${enrichedMsgString} ${wss.clients.size}`
         );
         // wss.clients.forEach((client) => {
         //   if (client !== ws && client.readyState === WebSocket.OPEN) {
-        //     client.send(enrichedMsg.toString());
+        //     client.send(enrichedMsgString.toString());
         //   }
         // });
-        //Send a enrichedMsg to the queue
-        //channel.sendToQueue("chat-msgs", Buffer.from(enrichedMsg.toString()));
+        //Send a enrichedMsgString to the queue
+        //channel.sendToQueue("chat-msgs", Buffer.from(enrichedMsgString.toString()));
       });
       ws.on("close", () => {
         console.log("one connection closed, remaining:", --connections);

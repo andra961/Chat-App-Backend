@@ -32,51 +32,51 @@ services:
     ports:
       - 15672:15672
       - 5672:5672
-  ws1:
-    build: .
-    ports:
-      - 8070:8070
+  # ws1:
+  #   build: .
+  #   ports:
+  #     - 8070:8070
 
-    environment:
-      - "POSTGRES_HOST=db"
-      - "RABBITMQ_HOST=rabbitmq"
-      - "WS_SERVER_PORT=8070"
-      #use db service internal port (5432) and NOT the port mapped for the host machine (aka 5000) since containers in network can only see their internal ports
-      - "DATABASE_URL=postgresql://app:app@db:5432/chat?schema=public"
-    depends_on:
-      - db
-      - rabbitmq
-    #it is not granted the service will start before the services it depends on, so keep restart until it doesn't fails (aka other services aren't up yet)
-    restart: on-failure
-  ws2:
-    build: .
-    ports:
-      - 8060:8060
+  #   environment:
+  #     - "POSTGRES_HOST=db"
+  #     - "RABBITMQ_HOST=rabbitmq"
+  #     - "WS_SERVER_PORT=8070"
+  #     #use db service internal port (5432) and NOT the port mapped for the host machine (aka 5000) since containers in network can only see their internal ports
+  #     - "DATABASE_URL=postgresql://app:app@db:5432/chat?schema=public"
+  #   depends_on:
+  #     - db
+  #     - rabbitmq
+  #   #it is not granted the service will start before the services it depends on, so keep restart until it doesn't fails (aka other services aren't up yet)
+  #   restart: on-failure
+  # ws2:
+  #   build: .
+  #   ports:
+  #     - 8060:8060
 
-    environment:
-      - "POSTGRES_HOST=db"
-      - "RABBITMQ_HOST=rabbitmq"
-      - "WS_SERVER_PORT=8060"
-      #use db service internal port (5432) and NOT the port mapped for the host machine (aka 5000) since containers in network can only see their internal ports
-      - "DATABASE_URL=postgresql://app:app@db:5432/chat?schema=public"
-    depends_on:
-      - db
-      - rabbitmq
-    #it is not granted the service will start before the services it depends on, so keep restart until it doesn't fails (aka other services aren't up yet)
-    restart: on-failure
-  ws3:
-    build: .
-    ports:
-      - 8050:8050
+  #   environment:
+  #     - "POSTGRES_HOST=db"
+  #     - "RABBITMQ_HOST=rabbitmq"
+  #     - "WS_SERVER_PORT=8060"
+  #     #use db service internal port (5432) and NOT the port mapped for the host machine (aka 5000) since containers in network can only see their internal ports
+  #     - "DATABASE_URL=postgresql://app:app@db:5432/chat?schema=public"
+  #   depends_on:
+  #     - db
+  #     - rabbitmq
+  #   #it is not granted the service will start before the services it depends on, so keep restart until it doesn't fails (aka other services aren't up yet)
+  #   restart: on-failure
+  # ws3:
+  #   build: .
+  #   ports:
+  #     - 8050:8050
 
-    environment:
-      - "POSTGRES_HOST=db"
-      - "RABBITMQ_HOST=rabbitmq"
-      - "WS_SERVER_PORT=8050"
-      #use db service internal port (5432) and NOT the port mapped for the host machine (aka 5000) since containers in network can only see their internal ports
-      - "DATABASE_URL=postgresql://app:app@db:5432/chat?schema=public"
-    depends_on:
-      - db
-      - rabbitmq
-    #it is not granted the service will start before the services it depends on, so keep restart until it doesn't fails (aka other services aren't up yet)
-    restart: on-failure
+  #   environment:
+  #     - "POSTGRES_HOST=db"
+  #     - "RABBITMQ_HOST=rabbitmq"
+  #     - "WS_SERVER_PORT=8050"
+  #     #use db service internal port (5432) and NOT the port mapped for the host machine (aka 5000) since containers in network can only see their internal ports
+  #     - "DATABASE_URL=postgresql://app:app@db:5432/chat?schema=public"
+  #   depends_on:
+  #     - db
+  #     - rabbitmq
+  #   #it is not granted the service will start before the services it depends on, so keep restart until it doesn't fails (aka other services aren't up yet)
+  #   restart: on-failure

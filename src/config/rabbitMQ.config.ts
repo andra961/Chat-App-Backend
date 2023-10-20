@@ -5,37 +5,61 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const MSG_EXCHANGE = "msgs";
-
-export const initRabbit = async () => {
+export const initRabbitChannel = async () => {
   const rabbitConn = await rabbitConnect();
   const ch = await rabbitConn.createChannel();
 
-  // Makes the queue available to the client
-  await ch.assertQueue("chat-msgs");
-
-  return ch;
+  return { connection: rabbitConn, channel: ch };
 };
 
-export const initRabbitPubSub = async (onMsg: (msg: string) => void) => {
-  const rabbitConn = await rabbitConnect();
-  console.log("connected rabbit");
+export const initStoreMessageQueue = async (ch: Channel) => {
+  // Makes the queue available to the client
+  const queue = await ch.assertQueue(
+    process.env.RABBITMQ_MSG_STORE_QUEUE || "msgs2store",
+    {
+      durable: true,
+    }
+  );
 
-  const ch = await rabbitConn.createChannel();
+  return { storeQueue: queue };
+};
 
-  const exchange = await ch.assertExchange(MSG_EXCHANGE, "fanout", {
-    durable: false,
-  });
+export const initMessageExchange = async (
+  ch: Channel,
+  onMsg: (msg: string) => void
+) => {
+  //assert the queue for sending the msgs to be stored in the db by workers
+  await initStoreMessageQueue(ch);
 
+  //assert fanout (broadcast) exchange
+  const exchange = await ch.assertExchange(
+    process.env.RABBITMQ_MSG_EXCHANGE || "msgs",
+    "fanout",
+    {
+      durable: false,
+    }
+  );
+
+  //create unique queue for this worker, exclusive means that it's created with a unique name and it's destroyed as soon as this worker is down
   const queue = await ch.assertQueue("", {
     exclusive: true,
   });
 
-  // console.log(ch, queue, rabbitConn);
   await ch.bindQueue(queue.queue, exchange.exchange, "");
 
   const publishMsg = (msg: string) => {
-    ch.publish(MSG_EXCHANGE, "", Buffer.from(msg));
+    //publish in the exchange for every ws server to read
+    ch.publish(
+      process.env.RABBITMQ_MSG_EXCHANGE || "msgs",
+      "",
+      Buffer.from(msg)
+    );
+
+    //send to the store queue for workers to store it in db
+    ch.sendToQueue(
+      process.env.RABBITMQ_MSG_STORE_QUEUE || "msgs2store",
+      Buffer.from(msg)
+    );
   };
 
   ch.consume(queue.queue, (msg) => {
@@ -45,7 +69,5 @@ export const initRabbitPubSub = async (onMsg: (msg: string) => void) => {
     }
   });
 
-  return { publishMsg, channel: ch, queue, connection: rabbitConn };
+  return { publishMsg, queue };
 };
-
-export default initRabbit;
