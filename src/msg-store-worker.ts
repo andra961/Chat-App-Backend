@@ -3,7 +3,7 @@ import {
   initRabbitChannel,
   initStoreMessageQueue,
 } from "./config/rabbitMQ.config";
-import { postMessage } from "./services/postgres";
+import { postMessage } from "./services/db";
 
 const initWorker = async () => {
   const { channel } = await initRabbitChannel();

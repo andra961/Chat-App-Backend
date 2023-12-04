@@ -1,6 +1,8 @@
 // import pool from "../config/postgres.config";
 import prisma from "../config/prisma.config";
 import { DirectMessage, GroupMessage } from "../models/message";
+import { promises } from "fs";
+import path from "path";
 
 // export const createTable = async () => {
 //   await pool.query(`
@@ -11,6 +13,8 @@ import { DirectMessage, GroupMessage } from "../models/message";
 //     timestamp TIMESTAMP
 //   );`);
 // };
+
+const { readFile } = promises;
 
 export const getMessages = async (id: string) => {
   // const results = await pool.query<Message>("SELECT * FROM messages");
@@ -108,4 +112,24 @@ export const getChats = async (userId: number) => {
   });
 
   return chats;
+};
+
+export const createGroup = async (ownerId: number, name: string) => {
+  // const query = await readFile(
+  //   path.join(__dirname, "..", "sql", "createGroup.sql"),
+  //   { encoding: "utf8" }
+  // );
+  const chat = await prisma.chat.create({
+    data: {
+      ownerId,
+      name,
+      members: {
+        connect: { id: ownerId },
+      },
+    },
+  });
+
+  // await prisma.$queryRawUnsafe(query, [ownerId, name]);
+
+  return chat;
 };

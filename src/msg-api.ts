@@ -4,7 +4,7 @@ import crypto from "crypto";
 import cors from "cors";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
-import { createUser, getChats, getMessages } from "./services/postgres";
+import { createGroup, createUser, getChats, getMessages } from "./services/db";
 import bcrypt from "bcrypt";
 import morgan from "morgan";
 import dotenv from "dotenv";
@@ -74,6 +74,13 @@ const initApp = async () => {
   // }
 
   app.post("/is-authenticated", authenticateToken, async (req, res) => {
+    res.status(200).json(req.user);
+  });
+
+  app.post("/chats", authenticateToken, async (req, res) => {
+    const { userId } = req.user;
+    const { name } = req.body;
+    await createGroup(userId, name);
     res.status(200).json(req.user);
   });
 

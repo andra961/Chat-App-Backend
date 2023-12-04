@@ -7,7 +7,7 @@ import {
 } from "./config/rabbitMQ.config";
 import { createServer, IncomingMessage } from "http";
 import url, { URLSearchParams } from "url";
-import { verifyWsTicket } from "./services/postgres";
+import { verifyWsTicket } from "./services/db";
 import prisma from "./config/prisma.config";
 import { DirectMessage, GroupMessage, MessageBase } from "./models/message";
 
