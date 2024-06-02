@@ -10,7 +10,7 @@ datasource db {
 model Chat {
   id Int @id @default(autoincrement())
   name String @db.VarChar(60)
-  owner User @relation("owner", fields: [ownerId], references: [id])
+  owner User @relation("owner", fields: [ownerId], references: [id], onDelete: Cascade)
   ownerId Int
   members User[] @relation("member")
   messages GroupMessage[]
@@ -36,7 +36,7 @@ model Message {
 model GroupMessage {
   id        Int      @id @default(autoincrement())
   senderId  String   @db.VarChar(30)
-  chat  Chat   @relation(fields: [chatId], references: [id])
+  chat  Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
   chatId  Int
   text      String   @db.VarChar(1000)
   timestamp DateTime @db.Timestamp(6)
@@ -46,6 +46,6 @@ model WsTicket {
   id        Int      @id @default(autoincrement())
   ticket String @unique @db.VarChar(64)
   expiration DateTime @db.Timestamp(6)
-  user  User @relation(fields: [userId], references: [id])
+  user  User @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId Int
 }

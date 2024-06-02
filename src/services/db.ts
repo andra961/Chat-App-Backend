@@ -102,12 +102,38 @@ export const verifyWsTicket = async (ticket: string) => {
 //shoud be equivalent to innerjoin SELECT * FROM "Chat" INNER JOIN _member ON "Chat".id = _member.A WHERE _member.B = 28
 export const getChats = async (userId: number) => {
   const chats = await prisma.chat.findMany({
+    include: {
+      members: {
+        select: {
+          id: true,
+          username: true,
+        },
+      },
+    },
     where: {
       members: {
         some: {
           id: userId,
         },
       },
+    },
+  });
+
+  return chats;
+};
+
+export const getChat = async (chatId: number) => {
+  const chats = await prisma.chat.findUniqueOrThrow({
+    include: {
+      members: {
+        select: {
+          id: true,
+          username: true,
+        },
+      },
+    },
+    where: {
+      id: chatId,
     },
   });
 
@@ -130,6 +156,16 @@ export const createGroup = async (ownerId: number, name: string) => {
   });
 
   // await prisma.$queryRawUnsafe(query, [ownerId, name]);
+
+  return chat;
+};
+
+export const deleteGroup = async (chatId: number) => {
+  const chat = await prisma.chat.delete({
+    where: {
+      id: chatId,
+    },
+  });
 
   return chat;
 };

@@ -4,7 +4,14 @@ import crypto from "crypto";
 import cors from "cors";
 import bodyParser from "body-parser";
 import jwt from "jsonwebtoken";
-import { createGroup, createUser, getChats, getMessages } from "./services/db";
+import {
+  createGroup,
+  createUser,
+  deleteGroup,
+  getChat,
+  getChats,
+  getMessages,
+} from "./services/db";
 import bcrypt from "bcrypt";
 import morgan from "morgan";
 import dotenv from "dotenv";
@@ -52,7 +59,7 @@ const initApp = async () => {
 
   app.get("/messages/:chatId", authenticateToken, async (req, res) => {
     const { chatId } = req.params;
-    // console.log(chatId, req);
+
     const results = await getMessages(chatId);
 
     res.status(200).send(results);
@@ -66,15 +73,22 @@ const initApp = async () => {
     res.status(200).send(results);
   });
 
-  //create table if it doesn't exist
-  // try {
-  //   await createTable();
-  // } catch (e) {
-  //   console.error(`${e}`);
-  // }
+  app.get("/chats/:chatId", authenticateToken, async (req, res) => {
+    const { userId } = req.user;
+
+    const { chatId } = req.params;
+
+    const results = await getChat(Number(chatId));
+
+    //if the user is asking is not a member of the chat return 401
+    if (!results.members.some((m) => m.id === userId))
+      return res.sendStatus(401);
+
+    res.status(200).send(results);
+  });
 
   app.post("/is-authenticated", authenticateToken, async (req, res) => {
-    res.status(200).json(req.user);
+    res.status(200).json({ ...req.user, id: req.user.userId });
   });
 
   app.post("/chats", authenticateToken, async (req, res) => {
@@ -84,20 +98,20 @@ const initApp = async () => {
     res.status(200).json(req.user);
   });
 
+  app.delete("/chats/:chatId", authenticateToken, async (req, res) => {
+    const { userId } = req.user;
+    const { chatId } = req.params;
+
+    const chat = await getChat(Number(chatId));
+    //if not owner return 401
+    if (chat.ownerId !== userId) return res.sendStatus(401);
+    await deleteGroup(Number(chatId));
+    res.status(200).json(chat);
+  });
+
   app.post("/login", async (req, res, next) => {
     const { username, password } = req.body;
 
-    // let existingUser;
-    // try {
-    //   existingUser = await User.findOne({ email: email });
-    // } catch {
-    //   const error = new Error("Error! Something went wrong.");
-    //   return next(error);
-    // }
-    // if (!existingUser || existingUser.password != password) {
-    //   const error = Error("Wrong details please check at once");
-    //   return next(error);
-    // }
     try {
       const user = await prisma.user.findUniqueOrThrow({
         where: {
@@ -117,7 +131,7 @@ const initApp = async () => {
 
       console.log(token);
 
-      res.status(201).json({ token: token, username });
+      res.status(201).json({ token: token, username, id: user.id });
     } catch (err) {
       const error = new Error(
         err instanceof Error ? err.message : "Something went wrong"
@@ -126,7 +140,6 @@ const initApp = async () => {
     }
   });
 
-  // Handling post request
   app.post("/register", async (req, res, next) => {
     const { username, password } = req.body;
     const salt = await bcrypt.genSalt(10);
@@ -143,7 +156,7 @@ const initApp = async () => {
 
       console.log(token);
 
-      res.status(201).json({ token: token, username });
+      res.status(201).json({ token: token, username, id: user.id });
     } catch (err) {
       const error = new Error(
         err instanceof Error ? err.message : "Something went wrong"
